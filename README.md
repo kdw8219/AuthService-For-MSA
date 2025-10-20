@@ -48,6 +48,7 @@ python manage.py runserver
 | POST   | /api/auth/login/       | 로그인 및 토큰 발급 |
 | POST   | /api/auth/refresh/     | 토큰 갱신         |
 | POST   | /api/auth/logout/      | 로그아웃          |
+```
 
 ### Example Request (Register)
 ```bash
