@@ -56,7 +56,7 @@ POST /api/auth/register/
   "username": "user1",
   "password": "1234"
 }
-
+```
 
 
 ## 🧩 프로젝트 구조 (Project Structure)
