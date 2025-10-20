@@ -51,6 +51,7 @@ python manage.py runserver
 ```
 
 ### Example Request (Register)
+
 ```bash
 POST /api/auth/register/
 {
@@ -61,6 +62,7 @@ POST /api/auth/register/
 
 
 ## 🧩 프로젝트 구조 (Project Structure)
+
 ```markdown
 ## Project Structure
 auth_service/
@@ -74,9 +76,11 @@ auth_service/
 │   ├── urls.py
 │   └── wsgi.py
 └── manage.py
+
 ```
 
 ## Testing
+
 ```bash
 python manage.py test
 
@@ -84,8 +88,10 @@ python manage.py test
 ```
 
 ## 📜 라이선스 (License)
+
 ```markdown
 ## License
 This project is licensed under the GNU General Public License v3.0 (GPLv3).
 See the [LICENSE](./LICENSE) file for details.
+
 ```
