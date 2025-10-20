@@ -34,10 +34,7 @@ python manage.py migrate
 
 # 5. Start the server
 python manage.py runserver
-
-
-
----
+```
 
 ##  API 사용법 (Usage / API Endpoints)
 - 주요 엔드포인트와 요청/응답 예시를 간단히 작성  
@@ -76,18 +73,18 @@ auth_service/
 │   ├── urls.py
 │   └── wsgi.py
 └── manage.py
-
+```
 
 ## Testing
 ```bash
 python manage.py test
 
 
-
----
+```
 
 ## 📜 라이선스 (License)
 ```markdown
 ## License
 This project is licensed under the GNU General Public License v3.0 (GPLv3).
 See the [LICENSE](./LICENSE) file for details.
+```
