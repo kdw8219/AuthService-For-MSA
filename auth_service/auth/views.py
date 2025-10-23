@@ -9,8 +9,26 @@ def _cookie_secure_flag():
 
 
 def token_view(request): # POST/DELETE
-    #TODO: User(Robot, Management user)의 login 시도 시 JWT 토큰 발급
-    return HttpResponse("login success")
+    response = None
+    
+    if request.method == "POST":
+        response = create_new_tokens_and_set_response()
+        response.json({"detail": "login success"})
+        response.status_code = 200
+        
+    elif request.method == "DELETE":
+        #logout 시도 시 토큰 블랙리스트 처리
+        
+        refresh_token = request.COOKIES.get("refresh_token")
+
+        tokens.delete_token_from_refresh_token(refresh_token)
+        tokens.add_token_to_blacklist(refresh_token)
+        
+        response = JsonResponse({"detail": "logout success"}, status=200)
+    else:
+        response = JsonResponse({"detail": "method not allowed"}, status=405)
+    
+    return response
 
 def token_refresh(request): # POST
     """
@@ -28,18 +46,13 @@ def token_refresh(request): # POST
     # if it is blacklisted, return error
     if not tokens.is_token_valid(refresh_token):
         return JsonResponse({"detail": "invalid refresh token"}, status=400)
+    
+    return create_new_tokens_and_set_response()
 
-    # TODO: 실제 구현에서는 refresh_token에서 user_id를 안전하게 파싱/검증
-    # 아래는 tokens.create_new_tokens의 테스트용 포맷에 맞춘 간단한 파싱 예시
-    user_id = None
-    prefix = "refresh_token_for_"
-    if isinstance(refresh_token, str) and refresh_token.startswith(prefix):
-        user_id = refresh_token[len(prefix) :]
 
-    if not user_id:
-        return JsonResponse({"detail": "cannot determine user from refresh token"}, status=400)
-
-    access_token, new_refresh_token = tokens.create_new_tokens(user_id)
+def create_new_tokens_and_set_response():
+    
+    access_token, new_refresh_token = tokens.create_new_tokens()
 
     response = JsonResponse({"detail": "token refresh success"})
     response["Authorization"] = f"Bearer {access_token}"
