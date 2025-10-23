@@ -37,18 +37,19 @@ def create_new_tokens():
     load_dotenv()
     ACCESS_SECRET_KEY = os.getenv("ACCESS_SECRET_KEY")
     REFRESH_SECRET_KEY = os.getenv("REFRESH_SECRET_KEY")
+    ISS = os.getenv("ISS")
     
     payload = {
-        "iss": "kdw",
-        "username": "kdw",
+        "iss": ISS,
+        "username": ISS,
         "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
         "iat": datetime.datetime.now(datetime.timezone.utc)
     }
     new_access_token = jwt.encode(payload, ACCESS_SECRET_KEY, algorithm="HS256")
     
     payload = {
-        "iss": "kdw",
-        "username": "kdw",
+        "iss": ISS,
+        "username": ISS,
         "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
         "iat": datetime.datetime.now(datetime.timezone.utc)
     }
