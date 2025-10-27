@@ -17,12 +17,13 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*7a@w%70@sghp-3qpblb-wg)%9zx3u7@_p*&&64xx&@$qan2+5'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -76,7 +77,7 @@ WSGI_APPLICATION = 'auth_service.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-load_dotenv()
+
 
 DATABASES = {
     'default': {
@@ -92,6 +93,11 @@ CACHES = {
         "LOCATION": "redis://127.0.0.1:6379/0",  # 0은 DB index
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 100,
+                'retry_on_timeout': True,
+            },
+            "PASSWORD": os.getenv("REDIS_AUTH"),
         },
         "TIMEOUT": 300,  # Default timeout of 5 minutes (300 seconds)
     }

@@ -1,19 +1,26 @@
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.conf import settings
 from tokens import views as tokens
-
+from django.views.decorators.csrf import csrf_exempt
+import jwt
+from dotenv import load_dotenv
+import os
 
 # Helper: decide cookie security based on settings.DEBUG (secure in production)
 def _cookie_secure_flag():
     return not getattr(settings, "DEBUG", True)
 
-
+@csrf_exempt #csrf exception을 함수 내부에서 처리
 def token_view(request): # POST/DELETE
     response = None
     
+    ua = request.META.get("HTTP_USER_AGENT", "")
+    if "Mozilla" in ua or "Chrome" in ua or "Safari" in ua:
+        return JsonResponse({"detail": "request from invalid source"}, status=400)
+    
     if request.method == "POST":
+        print("get auth post!")
         response = create_new_tokens_and_set_response()
-        response.json({"detail": "login success"})
         response.status_code = 200
         
     elif request.method == "DELETE":
@@ -54,14 +61,34 @@ def create_new_tokens_and_set_response():
     
     access_token, new_refresh_token = tokens.create_new_tokens()
 
-    response = JsonResponse({"detail": "token refresh success"})
-    response["Authorization"] = f"Bearer {access_token}"
-    response.set_cookie(
-        "refresh_token",
-        new_refresh_token,
-        httponly=True,
-        secure=_cookie_secure_flag(),
-        samesite="Lax",
-        path="/",
-    )
+    res = {
+        'access_token': access_token, 
+        'refresh_token' : new_refresh_token
+        }
+    
+    response = JsonResponse(res)
+    
+    return response
+
+def validate_token(request):
+    response = None
+    
+    if request.method == 'POST':
+        
+        refresh_token = ''
+        if tokens.is_in_refresh_token(refresh_token):
+            response = JsonResponse({"detail": "invalid refresh token"}, status=403)
+        else:
+            try:
+                load_dotenv()
+                secret_key = os.getenv('REFRESH_SECRET_KEY')
+
+                jwt.decode(refresh_token, secret_key, algorithms=["HS256"] )
+                response = JsonResponse({"detail": "valid refresh token"}, status=200)
+            except jwt.InvalidTokenError:
+                return JsonResponse({"valid": False}, status=401)
+                
+    else:
+        response = JsonResponse({"detail": "method not allowed"}, status = 405)
+        
     return response
