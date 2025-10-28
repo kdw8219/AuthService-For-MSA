@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 import jwt
 from dotenv import load_dotenv
 import os
+import json
 
 # Helper: decide cookie security based on settings.DEBUG (secure in production)
 def _cookie_secure_flag():
@@ -20,7 +21,7 @@ def token_view(request): # POST/DELETE
     
     if request.method == "POST":
         print("get auth post!")
-        response = create_new_tokens_and_set_response()
+        response = create_new_tokens_and_set_response(False)
         response.status_code = 200
         
     elif request.method == "DELETE":
@@ -37,6 +38,7 @@ def token_view(request): # POST/DELETE
     
     return response
 
+@csrf_exempt #csrf exception을 함수 내부에서 처리
 def token_refresh(request): # POST
     """
     리프레시 토큰으로 액세스 토큰 재발급
@@ -45,50 +47,65 @@ def token_refresh(request): # POST
     - 새 access_token은 Authorization 헤더로, 새 refresh_token은 cookie로 설정
     """
     # get refresh token from cookies
-    refresh_token = request.COOKIES.get("refresh_token")
-
+    request_string = request.body
+    data = json.loads(request_string)
+    refresh_token = data['refresh_token']
+    
     if not refresh_token:
         return JsonResponse({"detail": "no refresh token"}, status=400)
 
     # if it is blacklisted, return error
     if not tokens.is_token_valid(refresh_token):
-        return JsonResponse({"detail": "invalid refresh token"}, status=400)
+        return JsonResponse({"detail": "invalid refresh token"}, status=403)
     
-    return create_new_tokens_and_set_response()
+    return create_new_tokens_and_set_response(True)
 
-
-def create_new_tokens_and_set_response():
+@csrf_exempt #csrf exception을 함수 내부에서 처리
+def create_new_tokens_and_set_response(onlyAccess = False):
     
-    access_token, new_refresh_token = tokens.create_new_tokens()
-
-    res = {
-        'access_token': access_token, 
-        'refresh_token' : new_refresh_token
+    new_access_token = tokens.create_new_token(True)
+    
+    res = None
+    if onlyAccess:
+        new_access_token = tokens.create_new_token(True)
+        res = {
+            'access_token': new_access_token, 
         }
-    
+    else:
+        new_refresh_token = tokens.create_new_token(False)
+        res = {
+            'access_token': new_access_token,
+            'refresh_token': new_refresh_token,
+        }
+        tokens.set_refreh_to_redis(new_refresh_token)
+   
     response = JsonResponse(res)
     
     return response
 
+@csrf_exempt #csrf exception을 함수 내부에서 처리
 def validate_token(request):
     response = None
     
     if request.method == 'POST':
+        request_string = request.body
+        data = json.loads(request_string)
         
-        refresh_token = ''
-        if tokens.is_in_refresh_token(refresh_token):
+        refresh_token = data['refresh_token']
+        
+        if not tokens.is_in_refresh_token(refresh_token):
             response = JsonResponse({"detail": "invalid refresh token"}, status=403)
         else:
             try:
                 load_dotenv()
                 secret_key = os.getenv('REFRESH_SECRET_KEY')
-
                 jwt.decode(refresh_token, secret_key, algorithms=["HS256"] )
                 response = JsonResponse({"detail": "valid refresh token"}, status=200)
-            except jwt.InvalidTokenError:
-                return JsonResponse({"valid": False}, status=401)
-                
+            except jwt.InvalidTokenError or jwt.ExpiredJwtException:
+                response = JsonResponse({"detail": "invalid refresh token"}, status=403)
+        
+        return response
+          
     else:
         response = JsonResponse({"detail": "method not allowed"}, status = 405)
-        
-    return response
+        return response

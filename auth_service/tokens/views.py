@@ -3,6 +3,7 @@ import datetime
 import os
 from dotenv import load_dotenv
 from django_redis import get_redis_connection
+from typing import Optional
 
 def is_token_valid(token):
     conn = get_redis_connection("default")
@@ -25,7 +26,6 @@ def add_token_to_blacklist(token):
 def is_in_refresh_token(token):
     conn = get_redis_connection("default")
     key = conn.get(f'{token}')
-    print(f'is in refresh token : {key}')
     
     if key is None: #key가 없으면 유효하지 않으므로 False 리턴
         return False
@@ -36,38 +36,41 @@ def delete_token_from_cache(token):
     conn = get_redis_connection("default")
     conn.delete(f'{token}') #after delete, don't care anything.
 
-def create_new_tokens():
+def set_refreh_to_redis(new_refresh_token):
     """
     Create new access and refresh tokens for the given user_id.
     This is a placeholder function. Implement token creation logic here.
     """
-    
-    load_dotenv()
-    ACCESS_SECRET_KEY = os.getenv("ACCESS_SECRET_KEY")
-    REFRESH_SECRET_KEY = os.getenv("REFRESH_SECRET_KEY")
-    ISS = os.getenv("ISS")
-    
-    payload = {
-        "iss": ISS,
-        "username": ISS,
-        "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
-        "iat": datetime.datetime.now(datetime.timezone.utc)
-    }
-    new_access_token = jwt.encode(payload, ACCESS_SECRET_KEY, algorithm="HS256")
-    
-    payload = {
-        "iss": ISS,
-        "username": ISS,
-        "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
-        "iat": datetime.datetime.now(datetime.timezone.utc)
-    }
-    new_refresh_token = jwt.encode(payload, REFRESH_SECRET_KEY, algorithm="HS256")
-    
     conn = get_redis_connection("default")
     conn.set(new_refresh_token, 1, ex = 7*24*60*60)  # 7일 동안 refresh token에 저장
+
+def create_new_token(isAccess) -> Optional[str]:
+    load_dotenv()
+    ISS = os.getenv("ISS")
+    if isAccess:
+        ACCESS_SECRET_KEY = os.getenv("ACCESS_SECRET_KEY")
+        payload = {
+            "iss": ISS,
+            "username": ISS,
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
+            "iat": datetime.datetime.now(datetime.timezone.utc)
+        }
+        return jwt.encode(payload, ACCESS_SECRET_KEY, algorithm="HS256")
     
-    return new_access_token, new_refresh_token
+    else:
+        REFRESH_SECRET_KEY = os.getenv("REFRESH_SECRET_KEY")
+        payload = {
+            "iss": ISS,
+            "username": ISS,
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14),
+            "iat": datetime.datetime.now(datetime.timezone.utc)
+        }
+        
+        return jwt.encode(payload, REFRESH_SECRET_KEY, algorithm="HS256")
+
+
 
 def get_access_token(Cookie):
+    
     
     return ''
