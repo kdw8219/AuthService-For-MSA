@@ -6,10 +6,13 @@ from django_redis import get_redis_connection
 from typing import Optional
 
 def is_token_valid(token):
+    
+    if not validate_refresh_token(token):
+        add_token_to_blacklist(token)
+        return False
+    
     conn = get_redis_connection("default")
     key = conn.get(f'blacklist_{token}')
-    
-    print ('token_valid check: '+str(key is None))
     
     if key is None:# conn 했더니 데이터가 없다. --> 유효하다 --> True
         return True
@@ -68,9 +71,23 @@ def create_new_token(isAccess) -> Optional[str]:
         
         return jwt.encode(payload, REFRESH_SECRET_KEY, algorithm="HS256")
 
+def validate_refresh_token(token:str) -> bool:
+        load_dotenv()
+        
+        SECRET_KEY = os.getenv('REFERSH_SECRET_KEY')
+        try:
+            payload = jwt.decode(
+                token,
+                SECRET_KEY,
+                algorithms=["HS256"],
+                options={"require": ["exp", "iat"]}
+            )
+            
+            return True
 
-
-def get_access_token(Cookie):
-    
-    
-    return ''
+        except jwt.exceptions.ExpiredSignatureError:
+            print("Token has expired.")
+            return False
+        except jwt.exceptions.InvalidTokenError:
+            print("Invalid token.")
+            return False
