@@ -5,3 +5,4 @@ auth_service/tokens/migrations/__pycache__/
 auth_service/.env
 auth_service/venv
 auth_service/db.sqlite3
+auth_service/logs/django.log
