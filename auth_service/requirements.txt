@@ -2,11 +2,15 @@ aioredis==2.0.1
 asgiref==3.10.0
 async-timeout==5.0.1
 cffi==2.0.0
+click==8.3.0
 cryptography==46.0.3
 Django==5.2.7
 django-redis==6.0.0
 djangorestframework==3.16.1
+gunicorn==23.0.0
+h11==0.16.0
 jwt==1.4.0
+packaging==25.0
 psycopg2-binary==2.9.11
 pycparser==2.23
 PyJWT==2.10.1
@@ -14,3 +18,4 @@ python-dotenv==1.1.1
 redis==6.4.0
 sqlparse==0.5.3
 typing_extensions==4.15.0
+uvicorn==0.38.0
