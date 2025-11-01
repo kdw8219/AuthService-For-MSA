@@ -1,0 +1,7 @@
+auth/__pycache__/
+auth_service/__pycache__/
+tokens/__pycache__/
+tokens/migrations/__pycache__/
+venv
+*.pyc
+*.log
