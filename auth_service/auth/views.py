@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 import json
 import logging
+import asyncio
 
 logger = logging.getLogger('auth')
 
@@ -28,7 +29,8 @@ async def token_view(request): # POST/DELETE
         
         refresh_token = request.COOKIES.get("refresh_token")
 
-        tokens.add_token_to_blacklist(refresh_token)
+        # 굳이 응답 내보내는 걸 기다릴 필요는 없기 때문에 coroutine으로 동작
+        asyncio.create_task(tokens.add_token_to_blacklist(refresh_token))
         
         response = JsonResponse({"detail": "logout success"}, status=200)
     else:
