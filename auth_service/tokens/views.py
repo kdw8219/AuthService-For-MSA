@@ -28,7 +28,7 @@ async def get_redis():
 async def is_token_valid(token):
     
     if not validate_refresh_token(token):
-        add_token_to_blacklist(token)
+        await add_token_to_blacklist(token)
         return False
     
     conn = await get_redis()
@@ -40,6 +40,7 @@ async def is_token_valid(token):
     return False
     
 async def add_token_to_blacklist(token):
+    logger.info('[tokens/add_token_to_blacklist] start adding token to blacklist')
     conn = await get_redis()
     res = await conn.set(f'blacklist_{token}', 1, ex = 10*24*60*60)  # 10일 동안 블랙리스트에 저장
     
