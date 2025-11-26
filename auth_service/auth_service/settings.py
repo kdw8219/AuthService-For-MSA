@@ -32,6 +32,7 @@ ALLOWED_HOSTS = [
     'host.docker.internal',
     'localhost',
     '127.0.0.1',
+    'auth',
 ]
 
 
